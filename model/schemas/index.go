@@ -57,7 +57,7 @@ func (ix *Index) GetColumnsUpperNameByDq() string {
 
 // GetSuffixName 获取后缀名字.
 func (ix *Index) GetSuffixName() string {
-	return ix.Name
+	return UpperStartCamel(ix.Name)
 }
 
 // GetColumnsNameAndType 获取列名和类型.
