@@ -80,3 +80,30 @@ func (col *Column) GetUpperName() string {
 func (col *Column) GetLowerName() string {
 	return strings.ToLower(col.Name)
 }
+
+// GetTags 获取标签.
+func (col *Column) GetTags() string {
+	tags := "column:" + col.Name
+	if col.IsAutoIncrement() {
+		tags += ";autoIncrement"
+	}
+
+	if col.ColumnKey == "PRI" {
+		tags += ";primaryKey"
+	}
+
+	return tags
+}
+
+// HasComment 是否有注释.
+func (col *Column) HasComment() bool {
+	return col.ColumnComment != ""
+}
+
+// GetComment 获取注释.
+func (col *Column) GetComment() string {
+	comment := strings.ReplaceAll(col.ColumnComment, "\r", " ")
+	comment = strings.ReplaceAll(col.ColumnComment, "\n", " ")
+
+	return comment
+}

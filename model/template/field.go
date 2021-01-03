@@ -1,3 +1,3 @@
 package template
 
-var Field = `{{.name}} {{.type}} {{.tag}} {{if .hasComment}}// {{.comment}}{{end}}`
+var Field = "{{.GetUpperStartName}} {{.ConvertType}} `json:\"{{.GetLowerName}}\" gorm:\"{{.GetTags}}\"` {{if .HasComment}}// {{.GetComment}}{{end}}"
