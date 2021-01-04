@@ -9,5 +9,12 @@ var (
 	{{range .UniqueIndex}}
 	{{$.LowerStartCamelObject}}Rows{{.GetSuffixName}}NoPA = strings.Join(removeField({{$.LowerStartCamelObject}}FieldNames, {{.GetColumnsNameByDq}}, {{$.GetPrimaryAndAutoKeyName}}), "=?,") + "=?"
 	{{end}}
+
+	{{if .WithCached}}
+	cache{{.UpperStartCamelObject}}PKPrefix = "cache#{{.UpperStartCamelObject}}#PK#"
+	{{range .UniqueIndex}}
+	cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix = "cache#{{$.UpperStartCamelObject}}#{{.GetSuffixName}}#"
+	{{end}}
+	{{end}}
 )
 `

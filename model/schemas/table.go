@@ -84,7 +84,7 @@ func (t *Table) UpperStartCamelObject() string {
 	return UpperStartCamel(t.Name)
 }
 
-// GetPrimaryKeyName 获取主键列.
+// GetPrimaryKeyName 获取主键列,字段名带双引号.
 func (t *Table) GetPrimaryKeyName() (string, error) {
 	if t.PrimaryIndex == nil {
 		return "", fmt.Errorf("%s has not primarykey.", t.Name)
@@ -130,34 +130,6 @@ func (t *Table) GetPrimaryAndAutoKeyName() (string, error) {
 	}
 
 	return strings.Join(pk, ","), nil
-}
-
-// GetExpression 获取待插入字段列表.
-func (t *Table) GetExpression() string {
-	expressions := make([]string, 0, len(t.Columns))
-	for _, col := range t.Columns {
-		if col.IsAutoIncrement() {
-			continue
-		}
-
-		expressions = append(expressions, "?")
-	}
-
-	return strings.Join(expressions, ", ")
-}
-
-// GetExpressionValues 获取待插入字段列表.
-func (t *Table) GetExpressionValues() string {
-	expressionValues := make([]string, 0, len(t.Columns))
-	for _, col := range t.Columns {
-		if col.IsAutoIncrement() {
-			continue
-		}
-
-		expressionValues = append(expressionValues, "data."+col.GetUpperStartName())
-	}
-
-	return strings.Join(expressionValues, ", ")
 }
 
 // GetPKUpdateExpressionValues 获取主键字段列表.
@@ -244,4 +216,13 @@ func (t *Table) GetAutoUpperStartName() (string, error) {
 	}
 
 	return t.AutoIncrementColumn.GetUpperStartName(), nil
+}
+
+// GetPrimaryCacheKey 获取主键缓存用的列名.
+func (t *Table) GetPrimaryCacheKey() (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	return t.PrimaryIndex.GetColumnCacheName(), nil
 }

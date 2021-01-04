@@ -123,3 +123,14 @@ func (ix *Index) GetColumnsExpressionValues() string {
 
 	return strings.Join(expressionValues, ", ")
 }
+
+// GetColumnCacheName 获取缓存使用的列名.
+func (ix *Index) GetColumnCacheName() string {
+	results := make([]string, 0, len(ix.Columns))
+	for _, col := range ix.Columns {
+		name := col.GetUpperStartName()
+		results = append(results, name)
+	}
+
+	return strings.Join(results, "")
+}
