@@ -9,7 +9,7 @@ type (
 
 	// default{{.upperStartCamelObject}}Model model object
 	default{{.upperStartCamelObject}}Model struct {
-		conn *gorm.DB
+		{{if .withCache}}CachedDBConn{{else}}conn DBConn{{end}}
 		table string
 	}
 

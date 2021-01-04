@@ -45,14 +45,30 @@ func (ix *Index) AddColumn(col *Column) {
 	ix.Columns = append(ix.Columns, col)
 }
 
-// GetColumnsUpperNameByDq 获取大写的列名,带双引号.
-func (ix *Index) GetColumnsUpperNameByDq() string {
-	colnames := make([]string, 0)
+// GetColumns 获取列.
+func (ix *Index) GetColumns() map[string]*Column {
+	res := make(map[string]*Column, len(ix.Columns))
 	for _, col := range ix.Columns {
-		colnames = append(colnames, col.GetUpperNameByDoubleQuotation())
+		res[col.Name] = col
 	}
 
+	return res
+}
+
+// GetColumnsNameByDq 获取列名,带双引号,以逗号分隔.
+func (ix *Index) GetColumnsNameByDq() string {
+	colnames := ix.GetColumnNameSliceByDq()
 	return strings.Join(colnames, ",")
+}
+
+// GetColumnNameSliceByDq 获取列名的列表,带双引号.
+func (ix *Index) GetColumnNameSliceByDq() []string {
+	colnames := make([]string, 0)
+	for _, col := range ix.Columns {
+		colnames = append(colnames, col.GetNameByDoubleQuotation())
+	}
+
+	return colnames
 }
 
 // GetSuffixName 获取后缀名字.

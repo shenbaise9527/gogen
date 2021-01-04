@@ -9,7 +9,7 @@ import (
 )
 
 // GetTableInfos 获取表.
-func GetTableInfos(tablenames []string, url string) ([]*Table, error) {
+func GetTableInfos(tablenames []string, url string, withCached bool) ([]*Table, error) {
 	// parse dsn
 	dsn, err := mysql.ParseDSN(url)
 	if err != nil {
@@ -26,7 +26,7 @@ func GetTableInfos(tablenames []string, url string) ([]*Table, error) {
 	defer conn.Close()
 	tables := make([]*Table, 0, len(tablenames))
 	for _, name := range tablenames {
-		t, err := GetTableInfoByName(name, dsn.DBName, conn)
+		t, err := GetTableInfoByName(name, dsn.DBName, conn, withCached)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +38,7 @@ func GetTableInfos(tablenames []string, url string) ([]*Table, error) {
 }
 
 // 获取表信息.
-func GetTableInfoByName(name, dbname string, conn *sql.DB) (*Table, error) {
+func GetTableInfoByName(name, dbname string, conn *sql.DB, withCached bool) (*Table, error) {
 	// 查询表注释.
 	query := "select TABLE_COMMENT from TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
 	row := conn.QueryRow(query, dbname, name)
@@ -48,7 +48,7 @@ func GetTableInfoByName(name, dbname string, conn *sql.DB) (*Table, error) {
 		return nil, err
 	}
 
-	t := NewTable(name, comment)
+	t := NewTable(name, comment, withCached)
 
 	// 查询字段信息.
 	query = "SELECT COLUMN_NAME, DATA_TYPE, IFNULL(CHARACTER_MAXIMUM_LENGTH, 0) CHARACTER_MAXIMUM_LENGTH, IFNULL(NUMERIC_PRECISION, 0) NUMERIC_PRECISION, IFNULL(NUMERIC_SCALE, 0) NUMERIC_SCALE, COLUMN_KEY, EXTRA, COLUMN_COMMENT FROM COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
@@ -78,7 +78,7 @@ func GetTableInfoByName(name, dbname string, conn *sql.DB) (*Table, error) {
 	defer indexrows.Close()
 	var nonUnique int64
 	var indexName, indexColumnName string
-	indexs := make(map[string]*Index, 0)
+	indexs := make(map[string]*Index)
 	for indexrows.Next() {
 		err = indexrows.Scan(&nonUnique, &indexName, &indexColumnName)
 		if err != nil {

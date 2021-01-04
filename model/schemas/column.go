@@ -22,6 +22,11 @@ func (col *Column) IsAutoIncrement() bool {
 	return col.Extra == "auto_increment"
 }
 
+// IsPrimaryKey 是否是主键字段.
+func (col *Column) IsPrimaryKey() bool {
+	return col.ColumnKey == "PRI"
+}
+
 // IsTime 是否为time.Time类型.
 func (col *Column) IsTime() bool {
 	dt, _ := col.ConvertType()
@@ -61,9 +66,9 @@ func (col *Column) ConvertType() (string, error) {
 	}
 }
 
-// GetUpperNameByDoubleQuotation 获取名字,带双引号.
-func (col *Column) GetUpperNameByDoubleQuotation() string {
-	return `"` + col.GetUpperName() + `"`
+// GetNameByDoubleQuotation 获取名字,带双引号.
+func (col *Column) GetNameByDoubleQuotation() string {
+	return `"` + col.Name + `"`
 }
 
 // GetUpperStartName 获取名字.
@@ -88,7 +93,7 @@ func (col *Column) GetTags() string {
 		tags += ";autoIncrement"
 	}
 
-	if col.ColumnKey == "PRI" {
+	if col.IsPrimaryKey() {
 		tags += ";primaryKey"
 	}
 
@@ -103,7 +108,7 @@ func (col *Column) HasComment() bool {
 // GetComment 获取注释.
 func (col *Column) GetComment() string {
 	comment := strings.ReplaceAll(col.ColumnComment, "\r", " ")
-	comment = strings.ReplaceAll(col.ColumnComment, "\n", " ")
+	comment = strings.ReplaceAll(comment, "\n", " ")
 
 	return comment
 }

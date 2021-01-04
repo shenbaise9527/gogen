@@ -5,7 +5,7 @@ import (
 	"github.com/shenbaise9527/gogen/model/template"
 )
 
-func genTypes(table *schemas.Table, methods string) (string, error) {
+func genTypes(table *schemas.Table, methods string, withCache bool) (string, error) {
 	fieldsString, err := genFields(table)
 	if err != nil {
 		return "", err
@@ -17,6 +17,7 @@ func genTypes(table *schemas.Table, methods string) (string, error) {
 			"upperStartCamelObject": table.UpperStartCamelObject(),
 			"method":                methods,
 			"fields":                fieldsString,
+			"withCache":             withCache,
 			"comment":               table.TableComment,
 		})
 	if err != nil {

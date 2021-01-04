@@ -7,10 +7,9 @@ import (
 )
 
 type defaultTemplate struct {
-	name     string
-	text     string
-	savePath string
-	goFmt    bool
+	name  string
+	text  string
+	goFmt bool
 }
 
 func With(name string) *defaultTemplate {

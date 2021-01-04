@@ -7,7 +7,7 @@ import (
 	"github.com/shenbaise9527/gogen/model/template"
 )
 
-func genModel(pkg string, table *schemas.Table) (string, error) {
+func genModel(pkg string, withCache bool, table *schemas.Table) (string, error) {
 	imports, err := genImport(table)
 	if err != nil {
 		return "", err
@@ -50,7 +50,7 @@ func genModel(pkg string, table *schemas.Table) (string, error) {
 
 	var methods []string
 	methods = append(methods, insertM, findM, updateM, deleteM)
-	types, err := genTypes(table, strings.Join(methods, "\n"))
+	types, err := genTypes(table, strings.Join(methods, "\n"), withCache)
 	if err != nil {
 		return "", err
 	}

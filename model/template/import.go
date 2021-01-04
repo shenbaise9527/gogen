@@ -5,7 +5,5 @@ var Imports = `import (
 "fmt"
 "strings"
 {{if .IsContainTimeType}}"time"{{end}}
-
-"gorm.io/gorm"
 )
 `

@@ -14,11 +14,11 @@ import (
 var (
 	BuildVersion = "0.0.1"
 	commands     = []*cli.Command{
-		&cli.Command{
+		{
 			Name:  "model",
 			Usage: "generate model code, only support mysql",
 			Subcommands: []*cli.Command{
-				&cli.Command{
+				{
 					Name:  "datasource",
 					Usage: "generate model from datasource",
 					Flags: []cli.Flag{
@@ -33,6 +33,10 @@ var (
 						&cli.StringFlag{
 							Name:  "dir, d",
 							Usage: "the target dir",
+						},
+						&cli.StringFlag{
+							Name:  "cache, c",
+							Usage: "generate code with cache [optional]",
 						},
 					},
 					Action: model.SQLDataSource,

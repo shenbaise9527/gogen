@@ -3,15 +3,19 @@ package template
 var Insert = `
 // Insert insert the record
 func (m *default{{.UpperStartCamelObject}}Model) Insert(data *{{.UpperStartCamelObject}}) (sql.Result, error) {
+	db := m.conn.Create(data)
+	if db.Error != nil {
+		return nil, db.Error
+	}
 	{{if .IsContainAutoIncrement}}
-	query := fmt.Sprintf("insert into %s values ({{.GetExpression}})", m.table, {{.LowerStartCamelObject}}RowsAutoWithPlaceHolder)
+	res := newSqlResult(db.RowsAffected, data.{{.GetAutoUpperStartName}}, db.Error)
 	{{else}}
-	query := fmt.Sprintf("insert into %s values ({{.GetExpression}})", m.table, {{.LowerStartCamelObject}}Rows)
+	res := newSqlResult(db.RowsAffected, 0, db.Error)
 	{{end}}
-	ret, err := m.conn.Exec(query, {{.GetExpressionValues}})
 	
-	return ret, err
+	return res, db.Error
 }
 `
 
-var InsertMethod = `Insert(data *{{.UpperStartCamelObject}}) (sql.Result, error)`
+var InsertMethod = `// Insert insert the record
+Insert(data *{{.UpperStartCamelObject}}) (sql.Result, error)`
