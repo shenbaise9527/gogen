@@ -27,12 +27,6 @@ var (
 )
 
 type (
-	defaultResult struct {
-		rowsAffected int64
-		lastInsertID int64
-		err          error
-	}
-
 	// DBConn gorm db.
 	DBConn struct {
 		*gorm.DB
@@ -47,22 +41,6 @@ type (
 	QueryFn func(conn DBConn, v interface{}) error
 	ExecFn  func(conn DBConn) (int64, error)
 )
-
-func newSqlResult(rowsAffected, lastInsertID int64, err error) sql.Result {
-	return &defaultResult{
-		rowsAffected: rowsAffected,
-		lastInsertID: lastInsertID,
-		err:          err,
-	}
-}
-
-func (r *defaultResult) LastInsertId() (int64, error) {
-	return r.lastInsertID, r.err
-}
-
-func (r *defaultResult) RowsAffected() (int64, error) {
-	return r.rowsAffected, r.err
-}
 
 // NewDBConn new gorm object.
 func NewDBConn(datasource string) DBConn {
