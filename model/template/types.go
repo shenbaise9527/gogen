@@ -17,5 +17,12 @@ type (
 	{{.upperStartCamelObject}} struct {
 		{{.fields}}
 	}
+
+	{{if .hasUniqueIndex}}
+	// {{.lowerStartCamelObject}}Primary primary key struct.
+	{{.lowerStartCamelObject}}Primary struct {
+		{{.primaryfields}}
+	}
+	{{end}}
 )
 `

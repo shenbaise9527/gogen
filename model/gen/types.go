@@ -11,6 +11,11 @@ func genTypes(table *schemas.Table, methods string, withCache bool) (string, err
 		return "", err
 	}
 
+	primaryFields, err := genPrimaryFields(table)
+	if err != nil {
+		return "", err
+	}
+
 	output, err := template.With("types").
 		Parse(template.Types).
 		Execute(map[string]interface{}{
@@ -19,6 +24,9 @@ func genTypes(table *schemas.Table, methods string, withCache bool) (string, err
 			"fields":                fieldsString,
 			"withCache":             withCache,
 			"comment":               table.TableComment,
+			"lowerStartCamelObject": table.LowerStartCamelObject(),
+			"primaryfields":         primaryFields,
+			"hasUniqueIndex":        table.HasUniqueIndex(),
 		})
 	if err != nil {
 		return "", nil

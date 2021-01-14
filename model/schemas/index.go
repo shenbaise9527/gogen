@@ -76,6 +76,11 @@ func (ix *Index) GetSuffixName() string {
 	return UpperStartCamel(ix.Name)
 }
 
+// GetLowerName 获取名字.
+func (ix *Index) GetLowerName() string {
+	return LowerStartCamel(ix.Name)
+}
+
 // GetColumnsNameAndType 获取列名和类型.
 func (ix *Index) GetColumnsNameAndType() (string, error) {
 	results := make([]string, 0)
@@ -116,9 +121,14 @@ func (ix *Index) GetColumnsName() string {
 
 // GetColumnsExpressionValues 获取列名.
 func (ix *Index) GetColumnsExpressionValues() string {
+	return ix.GetColumnsExpressionValuesByPrefix("data.")
+}
+
+// GetColumnsExpressionValuesByPrefix 获取列名.
+func (ix *Index) GetColumnsExpressionValuesByPrefix(prefix string) string {
 	expressionValues := make([]string, 0, len(ix.Columns))
 	for _, col := range ix.Columns {
-		expressionValues = append(expressionValues, "data."+col.GetUpperStartName())
+		expressionValues = append(expressionValues, prefix+col.GetUpperStartName())
 	}
 
 	return strings.Join(expressionValues, ", ")
@@ -133,4 +143,9 @@ func (ix *Index) GetColumnCacheName() string {
 	}
 
 	return strings.Join(results, "")
+}
+
+// GetColumnKeyFmt 获取字段列表的格式化.
+func (ix *Index) GetColumnKeyFmt() string {
+	return "%s" + strings.Repeat("#%v", len(ix.Columns))
 }

@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	maxIdleConns = 64
-	maxOpenConns = 64
-	maxLifetime  = time.Minute
+	maxIdleConns                       = 64
+	maxOpenConns                       = 64
+	maxLifetime                        = time.Minute
+	CacheSafeGapBetweenIndexAndPrimary = time.Second * 5
 )
 
 var (
@@ -25,11 +26,27 @@ var (
 	dbOnce         sync.Once
 )
 
-type defaultResult struct {
-	rowsAffected int64
-	lastInsertID int64
-	err          error
-}
+type (
+	defaultResult struct {
+		rowsAffected int64
+		lastInsertID int64
+		err          error
+	}
+
+	// DBConn gorm db.
+	DBConn struct {
+		*gorm.DB
+	}
+
+	// CachedDBConn with cache.
+	CachedDBConn struct {
+		conn  DBConn
+		cache cache.Cache
+	}
+
+	QueryFn func(conn DBConn, v interface{}) error
+	ExecFn  func(conn DBConn) (int64, error)
+)
 
 func newSqlResult(rowsAffected, lastInsertID int64, err error) sql.Result {
 	return &defaultResult{
@@ -45,11 +62,6 @@ func (r *defaultResult) LastInsertId() (int64, error) {
 
 func (r *defaultResult) RowsAffected() (int64, error) {
 	return r.rowsAffected, r.err
-}
-
-// DBConn gorm db.
-type DBConn struct {
-	*gorm.DB
 }
 
 // NewDBConn new gorm object.
@@ -78,12 +90,6 @@ func NewDBConn(datasource string) DBConn {
 	return db
 }
 
-// CachedDBConn with cache.
-type CachedDBConn struct {
-	conn  DBConn
-	cache cache.Cache
-}
-
 // NewCachedDBConn with cache.
 func NewCachedDBConn(datasource string, c cache.CacheConf, opts ...cache.Option) CachedDBConn {
 	cc := CachedDBConn{
@@ -92,5 +98,32 @@ func NewCachedDBConn(datasource string, c cache.CacheConf, opts ...cache.Option)
 	}
 
 	return cc
+}
+
+// QueryRow single row with cache.
+func (cc CachedDBConn) QueryRow(v interface{}, key string, query QueryFn) error {
+	return cc.cache.Take(v, key, func(v interface{}) error {
+		return query(cc.conn, v)
+	})
+}
+
+// Exec exec with cache.
+func (cc CachedDBConn) Exec(exec ExecFn, keys ...string) (int64, error) {
+	rowsaffected, err := exec(cc.conn)
+	if err != nil {
+		return rowsaffected, err
+	}
+
+	err = cc.cache.DelCache(keys...)
+
+	return rowsaffected, err
+}
+
+// Transact start a transaction.
+func (cc CachedDBConn) Transact(fn func(DBConn) error) error {
+	return cc.conn.Transaction(func(tx *gorm.DB) error {
+		db := DBConn{tx}
+		return fn(db)
+	})
 }
 `

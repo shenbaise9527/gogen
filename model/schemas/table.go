@@ -226,3 +226,92 @@ func (t *Table) GetPrimaryCacheKey() (string, error) {
 
 	return t.PrimaryIndex.GetColumnCacheName(), nil
 }
+
+// GetPrimaryExpressionValues 获取主键字段列表.
+func (t *Table) GetPrimaryExpressionValues() (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	pk := t.PrimaryIndex.GetColumnsExpressionValues()
+
+	return pk, nil
+}
+
+// GetPrimaryExpressionValuesByPrefix 获取主键字段列表.
+func (t *Table) GetPrimaryExpressionValuesByPrefix(prefix string) (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	pk := t.PrimaryIndex.GetColumnsExpressionValuesByPrefix(prefix)
+
+	return pk, nil
+}
+
+// GetPrimaryExprValuesByPrefixWrap 获取主键字段列表.
+func (t *Table) GetPrimaryExprValuesByPrefixWrap(prefix string) (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	pk := "{" + t.PrimaryIndex.GetColumnsExpressionValuesByPrefix(prefix) + "}"
+
+	return pk, nil
+}
+
+// GetPrimaryIndexLowerName 获取主键索引名字.
+func (t *Table) GetPrimaryIndexLowerName() (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	return t.PrimaryIndex.GetLowerName(), nil
+}
+
+// GetPrimaryIndexSuffixName 获取主键索引名字.
+func (t *Table) GetPrimaryIndexSuffixName() (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	return t.PrimaryIndex.GetSuffixName(), nil
+}
+
+// GetPrimaryIndexKeyFmt 获取主键的序列,%s#%v#%v...
+func (t *Table) GetPrimaryIndexKeyFmt() (string, error) {
+	if t.PrimaryIndex == nil {
+		return "", fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	return t.PrimaryIndex.GetColumnKeyFmt(), nil
+}
+
+// GetPrimaryIndexColumns 获取主键索引名字.
+func (t *Table) GetPrimaryIndexColumns() ([]*Column, error) {
+	if t.PrimaryIndex == nil {
+		return nil, fmt.Errorf("%s has not primarykey.", t.Name)
+	}
+
+	return t.PrimaryIndex.Columns, nil
+}
+
+// HasUniqueIndex 是否存在唯一索引.
+func (t *Table) HasUniqueIndex() bool {
+	return len(t.UniqueIndex) != 0
+}
+
+// GetUniqueIndexKey 获取唯一索引key的列表.
+func (t *Table) GetUniqueIndexKey() string {
+	keys := make([]string, 0, len(t.UniqueIndex))
+	for i := range t.UniqueIndex {
+		keys = append(keys, t.UniqueIndex[i].GetLowerName()+"Key")
+	}
+
+	return strings.Join(keys, ", ")
+}
+
+// WithCachedAndUniqueIndex 是否有缓存和存在唯一索引.
+func (t *Table) WithCachedAndUniqueIndex() bool {
+	return t.WithCached && len(t.UniqueIndex) != 0
+}
