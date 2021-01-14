@@ -3,7 +3,7 @@ package template
 var Update = `
 // Update update the record by the primary key
 func (m *default{{.UpperStartCamelObject}}Model) Update(data *{{.UpperStartCamelObject}}) error {
-	{{if .WithCached}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExpressionValues}})
+	{{if .WithCached}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
 	_, err := m.Exec(func(conn DBConn) (int64, error) {
 		{{if .IsContainAutoIncrement}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPA){{else}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPK){{end}}
 		db := conn.Exec(query, {{.GetPKUpdateExpressionValues}})
@@ -21,7 +21,7 @@ func (m *default{{.UpperStartCamelObject}}Model) Update(data *{{.UpperStartCamel
 {{range .UniqueIndex}}
 // UpdateBy{{.GetSuffixName}} update the record by the unique key-{{.Name}}
 func (m *default{{$.UpperStartCamelObject}}Model) UpdateBy{{.GetSuffixName}}(data *{{$.UpperStartCamelObject}}) error {
-	{{if $.WithCached}}{{$.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExpressionValues}})
+	{{if $.WithCached}}{{$.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}})
 	_, err := m.Exec(func(conn DBConn) (int64, error) {
 		query := fmt.Sprintf("update %s set %s where {{.GetColumnsNameAndMark}}", m.table, {{$.LowerStartCamelObject}}Rows{{.GetSuffixName}}NoPA)
 		db := conn.Exec(query, {{$.GetUKUpdateExpressionValues .Name}})

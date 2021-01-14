@@ -3,7 +3,7 @@ package template
 var Delete = `
 // Delete delete the record
 func (m *default{{.UpperStartCamelObject}}Model) Delete(data *{{.UpperStartCamelObject}}) error {
-	{{if .WithCachedAndUniqueIndex}}return m.delete(data){{else}}return m.DeleteBy{{.GetPrimaryIndexSuffixName}}({{.GetPrimaryExpressionValues}}){{end}}
+	{{if .WithCachedAndUniqueIndex}}return m.delete(data){{else}}return m.DeleteBy{{.GetPrimaryIndexSuffixName}}({{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
 }
 
 // Delete delete the record by the primary key
@@ -47,12 +47,12 @@ func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}({{.
 
 {{if .WithCachedAndUniqueIndex}}
 func (m *default{{.UpperStartCamelObject}}Model) delete(data *{{.UpperStartCamelObject}}) error {
-	{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExpressionValues}})
+	{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
 	{{range .UniqueIndex}}
-	{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsExpressionValues}})
+	{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsExprValuesByPrefix "data."}})
 	{{end}}
 	_, err := m.Exec(func(conn DBConn) (int64, error) {
-		db := conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryExpressionValues}})
+		db := conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryExprValuesByPrefix "data."}})
 
 		return db.RowsAffected, db.Error
 	}, {{.GetPrimaryIndexLowerName}}Key, {{.GetUniqueIndexKey}})

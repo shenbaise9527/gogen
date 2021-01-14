@@ -152,7 +152,7 @@ func (t *Table) GetPKUpdateExpressionValues() (string, error) {
 		expressionValues = append(expressionValues, "data."+col.GetUpperStartName())
 	}
 
-	return strings.Join(expressionValues, ", ") + ", " + t.PrimaryIndex.GetColumnsExpressionValues(), nil
+	return strings.Join(expressionValues, ", ") + ", " + t.PrimaryIndex.GetColumnsExprValuesByPrefix("data."), nil
 }
 
 // GetUKUpdateExpressionValues 根据唯一索引更新时的字段列表.
@@ -176,7 +176,7 @@ func (t *Table) GetUKUpdateExpressionValues(ukname string) (string, error) {
 			expressionValues = append(expressionValues, "data."+col.GetUpperStartName())
 		}
 
-		return strings.Join(expressionValues, ", ") + ", " + ix.GetColumnsExpressionValues(), nil
+		return strings.Join(expressionValues, ", ") + ", " + ix.GetColumnsExprValuesByPrefix("data."), nil
 	}
 
 	return "", fmt.Errorf("the table(%s) does not have the unique index(%s)", t.Name, ukname)
@@ -227,24 +227,13 @@ func (t *Table) GetPrimaryCacheKey() (string, error) {
 	return t.PrimaryIndex.GetColumnCacheName(), nil
 }
 
-// GetPrimaryExpressionValues 获取主键字段列表.
-func (t *Table) GetPrimaryExpressionValues() (string, error) {
+// GetPrimaryExprValuesByPrefix 获取主键字段列表.
+func (t *Table) GetPrimaryExprValuesByPrefix(prefix string) (string, error) {
 	if t.PrimaryIndex == nil {
 		return "", fmt.Errorf("%s has not primarykey.", t.Name)
 	}
 
-	pk := t.PrimaryIndex.GetColumnsExpressionValues()
-
-	return pk, nil
-}
-
-// GetPrimaryExpressionValuesByPrefix 获取主键字段列表.
-func (t *Table) GetPrimaryExpressionValuesByPrefix(prefix string) (string, error) {
-	if t.PrimaryIndex == nil {
-		return "", fmt.Errorf("%s has not primarykey.", t.Name)
-	}
-
-	pk := t.PrimaryIndex.GetColumnsExpressionValuesByPrefix(prefix)
+	pk := t.PrimaryIndex.GetColumnsExprValuesByPrefix(prefix)
 
 	return pk, nil
 }
@@ -255,7 +244,7 @@ func (t *Table) GetPrimaryExprValuesByPrefixWrap(prefix string) (string, error) 
 		return "", fmt.Errorf("%s has not primarykey.", t.Name)
 	}
 
-	pk := "{" + t.PrimaryIndex.GetColumnsExpressionValuesByPrefix(prefix) + "}"
+	pk := "{" + t.PrimaryIndex.GetColumnsExprValuesByPrefix(prefix) + "}"
 
 	return pk, nil
 }

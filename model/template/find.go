@@ -34,7 +34,7 @@ func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}({{.Ge
 
 		found = true
 		primaryKey = {{$.LowerStartCamelObject}}Primary{{$.GetPrimaryExprValuesByPrefixWrap "data."}}
-		key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExpressionValues}})
+		key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}})
 		return m.cache.SetCacheWithExpire(key, &data, expire+CacheSafeGapBetweenIndexAndPrimary)
 	})
 	if err != nil {
@@ -45,9 +45,9 @@ func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}({{.Ge
 		return &data, nil
 	}
 
-	key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExpressionValuesByPrefix "primaryKey."}})
+	key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "primaryKey."}})
 	err = m.QueryRow(&data, key, func(conn DBConn, v interface{}) error {
-		return conn.Where("{{$.GetPrimaryKeyAndMark}}", {{$.GetPrimaryExpressionValuesByPrefix "primaryKey."}}).First(v).Error
+		return conn.Where("{{$.GetPrimaryKeyAndMark}}", {{$.GetPrimaryExprValuesByPrefix "primaryKey."}}).First(v).Error
 	})
 	{{else}}
 	err := m.conn.Where("{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).First(&data).Error

@@ -119,13 +119,8 @@ func (ix *Index) GetColumnsName() string {
 	return strings.Join(results, ", ")
 }
 
-// GetColumnsExpressionValues 获取列名.
-func (ix *Index) GetColumnsExpressionValues() string {
-	return ix.GetColumnsExpressionValuesByPrefix("data.")
-}
-
-// GetColumnsExpressionValuesByPrefix 获取列名.
-func (ix *Index) GetColumnsExpressionValuesByPrefix(prefix string) string {
+// GetColumnsExprValuesByPrefix 获取列名.
+func (ix *Index) GetColumnsExprValuesByPrefix(prefix string) string {
 	expressionValues := make([]string, 0, len(ix.Columns))
 	for _, col := range ix.Columns {
 		expressionValues = append(expressionValues, prefix+col.GetUpperStartName())
