@@ -2,13 +2,13 @@ package template
 
 var Delete = `
 // Delete delete the record
-func (m *default{{.UpperStartCamelObject}}Model) Delete(data *{{.UpperStartCamelObject}}) error {
-	{{if .WithCachedAndUniqueIndex}}return m.delete(data){{else}}return m.DeleteBy{{.GetPrimaryIndexSuffixName}}({{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
+func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
+	{{if .WithCachedAndUniqueIndex}}return m.delete(data){{else}}return m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
 }
 
 // Delete delete the record by the primary key
-func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffixName}}({{.GetPrimaryKeyAndType}}) error {
-	{{if .WithCached}}{{if .HasUniqueIndex}}data, err := m.FindOne({{.GetPrimaryKey}})
+func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx context.Context, {{.GetPrimaryKeyAndType}}) error {
+	{{if .WithCached}}{{if .HasUniqueIndex}}data, err := m.FindOne(ctx, {{.GetPrimaryKey}})
 	if err != nil {
 		return err
 	}
@@ -30,8 +30,8 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 
 {{range .UniqueIndex}}
 // DeleteBy{{.GetSuffixName}} delete the record by the unique key-{{.Name}}
-func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}({{.GetColumnsNameAndType}}) error {
-	{{if $.WithCached}}data, err := m.FindBy{{.GetSuffixName}}({{.GetColumnsName}})
+func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}(ctx context.Context, {{.GetColumnsNameAndType}}) error {
+	{{if $.WithCached}}data, err := m.FindBy{{.GetSuffixName}}(ctx, {{.GetColumnsName}})
 	if err != nil {
 		return err
 	}
@@ -64,12 +64,12 @@ func (m *default{{.UpperStartCamelObject}}Model) delete(data *{{.UpperStartCamel
 
 var DeleteMethod = `
 // Delete delete the record
-Delete(data *{{.UpperStartCamelObject}}) error
+Delete(ctx context.Context, data *{{.UpperStartCamelObject}}) error
 
 // Delete delete the record by the primary key
-DeleteBy{{.GetPrimaryIndexSuffixName}}({{.GetPrimaryKeyAndType}}) error
+DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx context.Context, {{.GetPrimaryKeyAndType}}) error
 {{range .UniqueIndex}}
 // DeleteBy{{.GetSuffixName}} delete the record by the unique key-{{.Name}}
-DeleteBy{{.GetSuffixName}}({{.GetColumnsNameAndType}}) error
+DeleteBy{{.GetSuffixName}}(ctx context.Context, {{.GetColumnsNameAndType}}) error
 {{end}}
 `

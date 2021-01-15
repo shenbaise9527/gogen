@@ -2,10 +2,10 @@ package template
 
 var Insert = `
 // Insert insert the record
-func (m *default{{.UpperStartCamelObject}}Model) Insert(data *{{.UpperStartCamelObject}}) error {
+func (m *default{{.UpperStartCamelObject}}Model) Insert(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
 	return m.conn.Create(data).Error
 }
 `
 
 var InsertMethod = `// Insert insert the record
-Insert(data *{{.UpperStartCamelObject}}) error`
+Insert(ctx context.Context, data *{{.UpperStartCamelObject}}) error`

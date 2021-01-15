@@ -38,6 +38,10 @@ var (
 							Name:  "cache, c",
 							Usage: "generate code with cache [optional]",
 						},
+						&cli.StringFlag{
+							Name:  "tracing",
+							Usage: "generate code with tracing [optional]",
+						},
 					},
 					Action: model.SQLDataSource,
 				},

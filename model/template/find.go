@@ -2,7 +2,7 @@ package template
 
 var FindOne = `
 // FindOne query the record by the primary key
-func (m *default{{.UpperStartCamelObject}}Model) FindOne({{.GetPrimaryKeyAndType}}) (*{{.UpperStartCamelObject}}, error) {
+func (m *default{{.UpperStartCamelObject}}Model) FindOne(ctx context.Context, {{.GetPrimaryKeyAndType}}) (*{{.UpperStartCamelObject}}, error) {
 	{{if .WithCached}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryKey}})
 	var resp {{.UpperStartCamelObject}}
 	err := m.QueryRow(&resp, {{.GetPrimaryIndexLowerName}}Key, func(conn DBConn, v interface{}) error {
@@ -21,7 +21,7 @@ func (m *default{{.UpperStartCamelObject}}Model) FindOne({{.GetPrimaryKeyAndType
 
 {{range .UniqueIndex}}
 // FindBy{{.GetSuffixName}} query the record by the unique key-{{.Name}}
-func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}({{.GetColumnsNameAndType}}) (*{{$.UpperStartCamelObject}}, error) {
+func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}(ctx context.Context, {{.GetColumnsNameAndType}}) (*{{$.UpperStartCamelObject}}, error) {
 	{{if $.WithCached}}{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsName}})
 	var data {{$.UpperStartCamelObject}}
 	var primaryKey {{$.LowerStartCamelObject}}Primary
@@ -60,10 +60,10 @@ func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}({{.Ge
 
 var FindOneMethod = `
 // FindOne query the record by the primary key
-FindOne({{.GetPrimaryKeyAndType}}) (*{{.UpperStartCamelObject}}, error)
+FindOne(ctx context.Context, {{.GetPrimaryKeyAndType}}) (*{{.UpperStartCamelObject}}, error)
 
 {{range .UniqueIndex}}
 // FindBy{{.GetSuffixName}} query the record by the unique key-{{.Name}}
-FindBy{{.GetSuffixName}}({{.GetColumnsNameAndType}}) (*{{$.UpperStartCamelObject}}, error)
+FindBy{{.GetSuffixName}}(ctx context.Context, {{.GetColumnsNameAndType}}) (*{{$.UpperStartCamelObject}}, error)
 {{end}}
 `
