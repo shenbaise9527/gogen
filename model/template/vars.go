@@ -10,7 +10,7 @@ var (
 	{{$.LowerStartCamelObject}}Rows{{.GetSuffixName}}NoPA = strings.Join(removeField({{$.LowerStartCamelObject}}FieldNames, {{.GetColumnsNameByDq}}, {{$.GetPrimaryAndAutoKeyName}}), "=?,") + "=?"
 	{{end}}
 
-	{{if .WithCached}}
+	{{if or .WithCached .WithTracing}}
 	cache{{.UpperStartCamelObject}}PKPrefix = "cache#{{.UpperStartCamelObject}}#PK"
 	{{range .UniqueIndex}}
 	cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix = "cache#{{$.UpperStartCamelObject}}#{{.GetSuffixName}}"

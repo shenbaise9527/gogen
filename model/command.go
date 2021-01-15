@@ -11,18 +11,20 @@ import (
 )
 
 const (
-	flagURL   = "url"
-	flagTable = "table"
-	flagDir   = "dir"
-	flagCache = "cache"
+	flagURL     = "url"
+	flagTable   = "table"
+	flagDir     = "dir"
+	flagCache   = "cache"
+	flagTracing = "tracing"
 )
 
 func SQLDataSource(ctx *cli.Context) error {
 	url := strings.TrimSpace(ctx.String(flagURL))
 	dir := strings.TrimSpace(ctx.String(flagDir))
 	cache := ctx.Bool(flagCache)
+	tracing := ctx.Bool(flagTracing)
 	tablenames := strings.Split(strings.TrimSpace(ctx.String(flagTable)), ",")
-	tables, err := schemas.GetTableInfos(tablenames, url, cache)
+	tables, err := schemas.GetTableInfos(tablenames, url, cache, tracing)
 	if err != nil {
 		return err
 	}

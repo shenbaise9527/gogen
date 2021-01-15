@@ -3,8 +3,21 @@ package template
 var Update = `
 // Update update the record by the primary key
 func (m *default{{.UpperStartCamelObject}}Model) Update(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
-	{{if .WithCached}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
-	_, err := m.Exec(func(conn DBConn) (int64, error) {
+	var err error
+	{{if .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
+	span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
+	defer span.Finish()
+	ext.DBStatement.Set(span, "Update")
+	span.SetTag("key", {{.GetPrimaryIndexLowerName}}Key)
+	defer func() {
+		if err != nil {
+			ext.Error.Set(span, true)
+			span.LogKV("error", err.Error())
+		}
+	}()
+	{{end}}
+	{{if .WithCached}}{{if not .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
+	_, err = m.Exec(func(conn DBConn) (int64, error) {
 		{{if .IsContainAutoIncrement}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPA){{else}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPK){{end}}
 		db := conn.Exec(query, {{.GetPKUpdateExpressionValues}})
 
@@ -12,7 +25,7 @@ func (m *default{{.UpperStartCamelObject}}Model) Update(ctx context.Context, dat
 	}, {{.GetPrimaryIndexLowerName}}Key)
 	{{else}}
 	{{if .IsContainAutoIncrement}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPA){{else}}query := fmt.Sprintf("update %s set %s where {{.GetPrimaryKeyAndMark}}", m.table, {{.LowerStartCamelObject}}RowsNoPK){{end}}
-	err := m.conn.Exec(query, {{.GetPKUpdateExpressionValues}}).Error
+	err = m.conn.Exec(query, {{.GetPKUpdateExpressionValues}}).Error
 	{{end}}
 
 	return err
@@ -21,8 +34,21 @@ func (m *default{{.UpperStartCamelObject}}Model) Update(ctx context.Context, dat
 {{range .UniqueIndex}}
 // UpdateBy{{.GetSuffixName}} update the record by the unique key-{{.Name}}
 func (m *default{{$.UpperStartCamelObject}}Model) UpdateBy{{.GetSuffixName}}(ctx context.Context, data *{{$.UpperStartCamelObject}}) error {
-	{{if $.WithCached}}{{$.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}})
-	_, err := m.Exec(func(conn DBConn) (int64, error) {
+	var err error
+	{{if $.WithTracing}}{{$.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}})
+	span := tracing.ChildOfSpanFromContext(ctx, "{{$.LowerStartCamelObject}}model")
+	defer span.Finish()
+	ext.DBStatement.Set(span, "UpdateBy{{.GetSuffixName}}")
+	span.SetTag("key", {{$.GetPrimaryIndexLowerName}}Key)
+	defer func() {
+		if err != nil {
+			ext.Error.Set(span, true)
+			span.LogKV("error", err.Error())
+		}
+	}()
+	{{end}}
+	{{if $.WithCached}}{{if not $.WithTracing}}{{$.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}}){{end}}
+	_, err = m.Exec(func(conn DBConn) (int64, error) {
 		query := fmt.Sprintf("update %s set %s where {{.GetColumnsNameAndMark}}", m.table, {{$.LowerStartCamelObject}}Rows{{.GetSuffixName}}NoPA)
 		db := conn.Exec(query, {{$.GetUKUpdateExpressionValues .Name}})
 
@@ -30,7 +56,7 @@ func (m *default{{$.UpperStartCamelObject}}Model) UpdateBy{{.GetSuffixName}}(ctx
 	}, {{$.GetPrimaryIndexLowerName}}Key)
 	{{else}}
 	query := fmt.Sprintf("update %s set %s where {{.GetColumnsNameAndMark}}", m.table, {{$.LowerStartCamelObject}}Rows{{.GetSuffixName}}NoPA)
-	err := m.conn.Exec(query, {{$.GetUKUpdateExpressionValues .Name}}).Error
+	err = m.conn.Exec(query, {{$.GetUKUpdateExpressionValues .Name}}).Error
 	{{end}}
 
 	return err

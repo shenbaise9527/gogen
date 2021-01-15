@@ -17,10 +17,11 @@ type Table struct {
 	AutoIncrementColumn *Column            // 自增字段.
 	IsContainTime       bool               // 是否包含time.Time类型.
 	WithCached          bool               // 是否缓存.
+	WithTracing         bool               // 是否开启链路追踪.
 }
 
 // NewTable 新建表对象.
-func NewTable(name, comment string, withCached bool) *Table {
+func NewTable(name, comment string, withCached, withTracing bool) *Table {
 	return &Table{
 		Name:         name,
 		TableComment: comment,
@@ -29,6 +30,7 @@ func NewTable(name, comment string, withCached bool) *Table {
 		UniqueIndex:  make([]*Index, 0),
 		NormalIndex:  make([]*Index, 0),
 		WithCached:   withCached,
+		WithTracing:  withTracing,
 	}
 }
 
