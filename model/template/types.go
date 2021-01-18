@@ -18,7 +18,7 @@ type (
 		{{.fields}}
 	}
 
-	{{if .hasUniqueIndex}}
+	{{if and .withCache .hasUniqueIndex}}
 	// {{.lowerStartCamelObject}}Primary primary key struct.
 	{{.lowerStartCamelObject}}Primary struct {
 		{{.primaryfields}}

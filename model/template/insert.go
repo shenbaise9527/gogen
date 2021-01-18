@@ -3,8 +3,8 @@ package template
 var Insert = `
 // Insert insert the record
 func (m *default{{.UpperStartCamelObject}}Model) Insert(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
-	var err error
-	{{if .WithTracing}}span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
+	{{if .WithTracing}}var err error
+	span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
 	defer span.Finish()
 	ext.DBStatement.Set(span, "Insert")
 	defer func() {
@@ -15,7 +15,7 @@ func (m *default{{.UpperStartCamelObject}}Model) Insert(ctx context.Context, dat
 	}()
 
 	err = m.conn.Create(data).Error
-	{{else}}err = m.conn.Create(data).Error{{end}}
+	{{else}}err := m.conn.Create(data).Error{{end}}
 
 	return err
 }

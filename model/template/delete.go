@@ -25,8 +25,8 @@ func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, dat
 
 // Delete delete the record by the primary key
 func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx context.Context, {{.GetPrimaryKeyAndType}}) error {
-	var err error
-	{{if .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryKey}})
+	{{if .WithTracing}}var err error
+	{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryKey}})
 	span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
 	defer span.Finish()
 	ext.DBStatement.Set(span, "DeleteBy{{.GetPrimaryIndexSuffixName}}")
@@ -38,7 +38,8 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 		}
 	}()
 	{{end}}
-	{{if .WithCached}}{{if .HasUniqueIndex}}data, err := m.FindOne(ctx, {{.GetPrimaryKey}})
+	{{if .WithCached}}{{if not .WithTracing}}var err error{{end}}
+	{{if .HasUniqueIndex}}data, err := m.FindOne(ctx, {{.GetPrimaryKey}})
 	if err != nil {
 		return err
 	}
@@ -51,8 +52,7 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 		return db.RowsAffected, db.Error
 	}, {{.GetPrimaryIndexLowerName}}Key)
 	{{end}}
-	{{else}}
-	err = m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
+	{{else}}err := m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
 	{{end}}
 
 	return err
@@ -61,8 +61,8 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 {{range .UniqueIndex}}
 // DeleteBy{{.GetSuffixName}} delete the record by the unique key-{{.Name}}
 func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}(ctx context.Context, {{.GetColumnsNameAndType}}) error {
-	var err error
-	{{if $.WithTracing}}{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsName}})
+	{{if $.WithTracing}}var err error
+	{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsName}})
 	span := tracing.ChildOfSpanFromContext(ctx, "{{$.LowerStartCamelObject}}model")
 	defer span.Finish()
 	ext.DBStatement.Set(span, "DeleteBy{{.GetSuffixName}}")
@@ -80,7 +80,8 @@ func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}(ctx
 	}
 
 	err = m.delete(data)
-	{{else}}err = m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
+	{{else if $.WithTracing}}err = m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
+	{{else}}err := m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
 	{{end}}
 
 	return err
