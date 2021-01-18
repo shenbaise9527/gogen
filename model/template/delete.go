@@ -3,8 +3,8 @@ package template
 var Delete = `
 // Delete delete the record
 func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
-	var err error
-	{{if .WithCachedAndUniqueIndex}}{{if .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
+	{{if .WithTracing}}var err error
+	{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
 	span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
 	defer span.Finish()
 	ext.DBStatement.Set(span, "Delete")
@@ -15,8 +15,10 @@ func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, dat
 			span.LogKV("error", err.Error())
 		}
 	}()
-	{{end}}{{end}}
 	{{if .WithCachedAndUniqueIndex}}err = m.delete(data){{else}}err = m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
+	{{else}}
+	{{if .WithCachedAndUniqueIndex}}err := m.delete(data){{else}}err := m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
+	{{end}}
 
 	return err
 }
