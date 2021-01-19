@@ -4,7 +4,7 @@ var DBConn = `package {{.pkg}}
 
 import (
 	"database/sql"
-	"sync"
+	"io"
 	"time"
 
 	"github.com/tal-tech/go-zero/core/stores/cache"
@@ -23,8 +23,7 @@ const (
 var (
 	exclusiveCalls = syncx.NewSharedCalls()
 	stats          = cache.NewCacheStat("dbc")
-	db             = DBConn{}
-	dbOnce         sync.Once
+	connManager    = syncx.NewResourceManager()
 )
 
 type (
@@ -35,45 +34,62 @@ type (
 
 	// CachedDBConn with cache.
 	CachedDBConn struct {
-		conn  DBConn
+		conn  *DBConn
 		cache cache.Cache
 	}
 
-	QueryFn func(conn DBConn, v interface{}) error
-	ExecFn  func(conn DBConn) (int64, error)
+	QueryFn func(conn *DBConn, v interface{}) error
+	ExecFn  func(conn *DBConn) (int64, error)
 )
 
 // NewDBConn new gorm object.
-func NewDBConn(datasource string) DBConn {
-	dbOnce.Do(func() {
-		conn, err := sql.Open("mysql", datasource)
+func NewDBConn(datasource string) *DBConn {
+	val, err := connManager.GetResource(datasource, func() (io.Closer, error) {
+		db, err := newDBConnection(datasource)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		conn.SetMaxIdleConns(maxIdleConns)
-		conn.SetMaxOpenConns(maxOpenConns)
-		conn.SetConnMaxLifetime(maxLifetime)
-		err = conn.Ping()
-		if err != nil {
-			panic(err)
-		}
-
-		db.DB, err = gorm.Open(mysql.New(mysql.Config{Conn: conn}), nil)
-		if err != nil {
-			panic(err)
-		}
+		return db, nil
 	})
+	if err != nil {
+		return nil
+	}
 
-	return db
+	return val.(*DBConn)
+}
+
+func newDBConnection(datasource string) (*DBConn, error) {
+	db := &DBConn{}
+	conn, err := sql.Open("mysql", datasource)
+	if err != nil {
+		return nil, err
+	}
+
+	conn.SetMaxIdleConns(maxIdleConns)
+	conn.SetMaxOpenConns(maxOpenConns)
+	conn.SetConnMaxLifetime(maxLifetime)
+	db.DB, err = gorm.Open(mysql.New(mysql.Config{Conn: conn}), &gorm.Config{
+		PrepareStmt: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 // Transact start a transaction.
-func (conn DBConn) Transact(fn func(DBConn) error) error {
+func (conn *DBConn) Transact(fn func(*DBConn) error) error {
 	return conn.Transaction(func(tx *gorm.DB) error {
-		db := DBConn{tx}
+		db := &DBConn{DB: tx}
 		return fn(db)
 	})
+}
+
+// Close closer interface
+func (conn *DBConn) Close() error {
+	return nil
 }
 
 // NewCachedDBConn with cache.
@@ -106,7 +122,7 @@ func (cc CachedDBConn) Exec(exec ExecFn, keys ...string) (int64, error) {
 }
 
 // Transact start a transaction.
-func (cc CachedDBConn) Transact(fn func(DBConn) error) error {
+func (cc CachedDBConn) Transact(fn func(*DBConn) error) error {
 	return cc.conn.Transact(fn)
 }
 `
