@@ -15,6 +15,7 @@ func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, dat
 			span.LogKV("error", err.Error())
 		}
 	}()
+
 	{{if .WithCachedAndUniqueIndex}}err = m.delete(data){{else}}err = m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
 	{{else}}
 	{{if .WithCachedAndUniqueIndex}}err := m.delete(data){{else}}err := m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
@@ -52,6 +53,7 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 		return db.RowsAffected, db.Error
 	}, {{.GetPrimaryIndexLowerName}}Key)
 	{{end}}
+	{{else if .WithTracing}}err = m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
 	{{else}}err := m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
 	{{end}}
 

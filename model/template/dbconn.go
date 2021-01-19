@@ -23,6 +23,7 @@ const (
 var (
 	exclusiveCalls = syncx.NewSharedCalls()
 	stats          = cache.NewCacheStat("dbc")
+	db             = DBConn{}
 	dbOnce         sync.Once
 )
 
@@ -44,7 +45,6 @@ type (
 
 // NewDBConn new gorm object.
 func NewDBConn(datasource string) DBConn {
-	db := DBConn{}
 	dbOnce.Do(func() {
 		conn, err := sql.Open("mysql", datasource)
 		if err != nil {
@@ -66,6 +66,14 @@ func NewDBConn(datasource string) DBConn {
 	})
 
 	return db
+}
+
+// Transact start a transaction.
+func (conn DBConn) Transact(fn func(DBConn) error) error {
+	return conn.Transaction(func(tx *gorm.DB) error {
+		db := DBConn{tx}
+		return fn(db)
+	})
 }
 
 // NewCachedDBConn with cache.
@@ -99,9 +107,6 @@ func (cc CachedDBConn) Exec(exec ExecFn, keys ...string) (int64, error) {
 
 // Transact start a transaction.
 func (cc CachedDBConn) Transact(fn func(DBConn) error) error {
-	return cc.conn.Transaction(func(tx *gorm.DB) error {
-		db := DBConn{tx}
-		return fn(db)
-	})
+	return cc.conn.Transact(fn)
 }
 `
