@@ -14,8 +14,12 @@ func (m *default{{.UpperStartCamelObject}}Model) Insert(ctx context.Context, dat
 		}
 	}()
 
-	err = m.conn.Create(data).Error
-	{{else}}err := m.conn.Create(data).Error{{end}}
+	err = m.conn.DoWithAcceptable({{else}}err := m.conn.DoWithAcceptable({{end}}
+		func() error {
+			err := m.conn.Create(data).Error
+
+			return err
+		}, m.conn.Acceptable)
 
 	return err
 }

@@ -3,7 +3,7 @@ package template
 var Delete = `
 // Delete delete the record
 func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, data *{{.UpperStartCamelObject}}) error {
-	{{if .WithTracing}}var err error
+	{{if .WithCachedAndUniqueIndex}}{{if .WithTracing}}var err error
 	{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryExprValuesByPrefix "data."}})
 	span := tracing.ChildOfSpanFromContext(ctx, "{{.LowerStartCamelObject}}model")
 	defer span.Finish()
@@ -16,10 +16,8 @@ func (m *default{{.UpperStartCamelObject}}Model) Delete(ctx context.Context, dat
 		}
 	}()
 
-	{{if .WithCachedAndUniqueIndex}}err = m.delete(data){{else}}err = m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
-	{{else}}
-	{{if .WithCachedAndUniqueIndex}}err := m.delete(data){{else}}err := m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
-	{{end}}
+	err = m.delete(data){{else}}err := m.delete(data){{end}}
+	{{else}}err := m.DeleteBy{{.GetPrimaryIndexSuffixName}}(ctx, {{.GetPrimaryExprValuesByPrefix "data."}}){{end}}
 
 	return err
 }
@@ -47,14 +45,18 @@ func (m *default{{.UpperStartCamelObject}}Model) DeleteBy{{.GetPrimaryIndexSuffi
 
 	err = m.delete(data)
 	{{else}}{{if not .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryKey}}){{end}}
-	_, err = m.Exec(func(conn DBConn) (int64, error) {
+	_, err = m.Exec(func(conn *DBConn) (int64, error) {
 		db := conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}})
 
 		return db.RowsAffected, db.Error
 	}, {{.GetPrimaryIndexLowerName}}Key)
 	{{end}}
-	{{else if .WithTracing}}err = m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
-	{{else}}err := m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
+	{{else}}{{if .WithTracing}}err = m.conn.DoWithAcceptable({{else}}err := m.conn.DoWithAcceptable({{end}}
+		func() error {
+			err := m.conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).Error
+
+			return err
+		}, m.conn.Acceptable)
 	{{end}}
 
 	return err
@@ -82,8 +84,12 @@ func (m *default{{$.UpperStartCamelObject}}Model) DeleteBy{{.GetSuffixName}}(ctx
 	}
 
 	err = m.delete(data)
-	{{else if $.WithTracing}}err = m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
-	{{else}}err := m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
+	{{else}}{{if $.WithTracing}}err = m.conn.DoWithAcceptable({{else}}err := m.conn.DoWithAcceptable({{end}}
+		func() error {
+			err := m.conn.Delete({{$.UpperStartCamelObject}}{}, "{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).Error
+
+			return err
+		}, m.conn.Acceptable)
 	{{end}}
 
 	return err
@@ -96,7 +102,7 @@ func (m *default{{.UpperStartCamelObject}}Model) delete(data *{{.UpperStartCamel
 	{{range .UniqueIndex}}
 	{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsExprValuesByPrefix "data."}})
 	{{end}}
-	_, err := m.Exec(func(conn DBConn) (int64, error) {
+	_, err := m.Exec(func(conn *DBConn) (int64, error) {
 		db := conn.Delete({{.UpperStartCamelObject}}{}, "{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryExprValuesByPrefix "data."}})
 
 		return db.RowsAffected, db.Error

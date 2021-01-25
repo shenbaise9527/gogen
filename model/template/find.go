@@ -18,11 +18,16 @@ func (m *default{{.UpperStartCamelObject}}Model) FindOne(ctx context.Context, {{
 	{{end}}
 	{{if .WithCached}}{{if not .WithTracing}}{{.GetPrimaryIndexLowerName}}Key := fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{.GetPrimaryKey}}){{end}}
 	var resp {{.UpperStartCamelObject}}
-	err = m.QueryRow(&resp, {{.GetPrimaryIndexLowerName}}Key, func(conn DBConn, v interface{}) error {
+	err = m.QueryRow(&resp, {{.GetPrimaryIndexLowerName}}Key, func(conn *DBConn, v interface{}) error {
 		return conn.Where("{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).First(v).Error
 	})
 	{{else}}var resp {{.UpperStartCamelObject}}
-	err = m.conn.Where("{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).First(&resp).Error
+	err = m.conn.DoWithAcceptable(
+		func() error {
+			err := m.conn.Where("{{.GetPrimaryKeyAndMark}}", {{.GetPrimaryKey}}).First(&resp).Error
+
+			return err
+		}, m.conn.Acceptable)
 	{{end}}
 
 	return &resp, err
@@ -47,33 +52,37 @@ func (m *default{{$.UpperStartCamelObject}}Model) FindBy{{.GetSuffixName}}(ctx c
 	var data {{$.UpperStartCamelObject}}
 	{{if $.WithCached}}{{if not $.WithTracing}}{{.GetLowerName}}Key := fmt.Sprintf("{{.GetColumnKeyFmt}}", cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix, {{.GetColumnsName}}){{end}}
 	var primaryKey {{$.LowerStartCamelObject}}Primary
-	var found bool
-	err = m.cache.TakeWithExpire(&primaryKey, {{.GetLowerName}}Key, func(val interface{}, expire time.Duration) error {
-		err := m.conn.Where("{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).First(&data).Error
-		if err != nil {
+	err = m.QueryRowIndex(
+		{{.GetLowerName}}Key, &primaryKey, &data, 
+		func(conn *DBConn, v interface{}) error {
+			return conn.Where("{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).First(v).Error
+		}, 
+		m.buildPrimaryKey, 
+		func(conn *DBConn, v interface{}) error {
+			return conn.Where("{{$.GetPrimaryKeyAndMark}}", {{$.GetPrimaryExprValuesByPrefix "primaryKey."}}).First(v).Error
+		},
+	)
+	{{else}}err = m.conn.DoWithAcceptable(
+		func() error {
+			err := m.conn.Where("{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).First(&data).Error
+
 			return err
-		}
-
-		found = true
-		primaryKey = {{$.LowerStartCamelObject}}Primary{{$.GetPrimaryExprValuesByPrefixWrap "data."}}
-		key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "data."}})
-		return m.cache.SetCacheWithExpire(key, &data, expire+CacheSafeGapBetweenIndexAndPrimary)
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if found {
-		return &data, nil
-	}
-
-	key := fmt.Sprintf("{{$.GetPrimaryIndexKeyFmt}}", cache{{$.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "primaryKey."}})
-	err = m.QueryRow(&data, key, func(conn DBConn, v interface{}) error {
-		return conn.Where("{{$.GetPrimaryKeyAndMark}}", {{$.GetPrimaryExprValuesByPrefix "primaryKey."}}).First(v).Error
-	})
-	{{else}}err = m.conn.Where("{{.GetColumnsNameAndMark}}", {{.GetColumnsName}}).First(&data).Error{{end}}
+		}, m.conn.Acceptable){{end}}
 
 	return &data, err
+}
+{{end}}
+
+{{if and .WithCached .HasUniqueIndex}}
+func (m *default{{.UpperStartCamelObject}}Model) buildPrimaryKey(v interface{}) (string, error) {
+	switch d := v.(type) {
+	case *{{.UpperStartCamelObject}}:
+		return fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "d."}}), nil
+	case *{{.LowerStartCamelObject}}Primary:
+		return fmt.Sprintf("{{.GetPrimaryIndexKeyFmt}}", cache{{.UpperStartCamelObject}}PKPrefix, {{$.GetPrimaryExprValuesByPrefix "d."}}), nil
+	default:
+		return "", fmt.Errorf("cant support type: %v", d)
+	}
 }
 {{end}}
 `
