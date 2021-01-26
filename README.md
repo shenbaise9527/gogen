@@ -134,7 +134,6 @@ func (conn *DBConn) Transact(fn func(*DBConn) error) error {
 			return conn.Transaction(func(tx *gorm.DB) error {
 				db := &DBConn{DB: tx}
 				return fn(db)
-
 			})
 		}, conn.Acceptable)
 }
