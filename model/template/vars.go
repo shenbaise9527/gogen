@@ -11,9 +11,9 @@ var (
 	{{end}}
 
 	{{if or .WithCached .WithTracing}}
-	cache{{.UpperStartCamelObject}}PKPrefix = "cache#{{.UpperStartCamelObject}}#PK"
+	cache{{.UpperStartCamelObject}}PKPrefix = "cache:{{.UpperStartCamelObject}}:PK"
 	{{range .UniqueIndex}}
-	cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix = "cache#{{$.UpperStartCamelObject}}#{{.GetSuffixName}}"
+	cache{{$.UpperStartCamelObject}}{{.GetSuffixName}}Prefix = "cache:{{$.UpperStartCamelObject}}:{{.GetSuffixName}}"
 	{{end}}
 	{{end}}
 )
